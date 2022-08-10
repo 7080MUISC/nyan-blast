@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <title>GAME</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        canvas {
+            border: 1px solid black;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+        section {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin-top: 30px;
+
+            display: none;
+        }
+
+        .game-over {
+            font-size: 100px;
+            color: crimson;
+        }
+
+        .restart-btn {
+            width: 300px;
+            font-size: 50px;
+            border-radius: 20px;
+            background-color: white;
+            color: crimson;
+            border: 2px solid cyan;
+        }
+    </style>
+</head>
+<body>
+    <section class="game-over" id="game-over">
+        <div>Game Over</div>
+        <button class="restart-btn">[Restart]</button>
+    </section>
+
+    <!--배경 음악-->>
+    <audio loop onloadstart="this.volume=0.5" controls>
+        <source  src="Nyan Cat [original].mp3">
+    </audio>
+    <canvas id="myCanvas" width="1200" height="600"></canvas>
+    <script>
+        // 점수, 생명
+        let score = 0;
+        let life = 5;
+
+
+        //사운드
+        let rainbowSound = new Audio("MP_swipe-whoosh.mp3");
+        let explodeSound = new Audio("clan.mp3");
+
+        //무지개 사운드 함수
+        function rSoundPlay() {
+            rainbowSound.volume = 0.15;
+            rainbowSound.load();
+            rainbowSound.currentTime = 0;
+            rainbowSound.play();
+        }
+
+        //폭발 사운드
+        function uSoundPlay() {
+            explodeSound.volume = 0.5;
+            explodeSound.load();
+            explodeSound.currentTime = 0;
+            explodeSound.play();
+        }
+
+        let canvas = $("#myCanvas").get(0);
+        let ctx = canvas.getContext("2d")
+
+        let bgImage = new Image();
+        bgImage.src = "OH.jpg";
+        let catImage = new Image();
+        catImage.src = "Nyan.png";
+        let eggImage = new Image();
+        eggImage.src = "egg.png";
+
+                // Egg 만들기 (3개)
+        let enemie_1 = {
+            id: "enemy1",
+            x: 1150,
+            y: Math.floor(Math.random()*(550-10+1))+10
+        }
+
+        let enemie_2 = {
+            id: "enemy2",
+            x: 1150,
+            y: Math.floor(Math.random()*(550-10+1))+10
+        }
+
+        let enemie_3 = {
+            id: "enemy3",
+            x: 1150,
+            y: Math.floor(Math.random()*(550-10+1))+10
+        }
+
+        function Enemy_1() {
+            this.w = 50;
+            this.h = 50;
+            this.render = function() { 
+                let enemyX = (enemie_1.x -= 6);
+                ctx.drawImage(eggImage, enemyX, enemie_1.y, this.w, this.h);
+
+                if (enemie_1.x < 0) {
+                    let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                    enemie_1.y = randomY;
+                    enemie_1.x = 1150;
+                }
+            }
+        }
+
+        function Enemy_2() {
+            this.w = 50;
+            this.h = 50;
+            this.render = function() {
+                let enemyX = (enemie_2.x -= 6);
+                ctx.drawImage(eggImage, enemyX, enemie_2.y, this.w, this.h);
+
+                if (enemie_2.x < 0) {
+                    let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                    enemie_2.y = randomY;
+                    enemie_2.x = 1150;
+                }
+            }
+        }
+        
+        function Enemy_3() {
+            this.w = 50;
+            this.h = 50;
+            this.render = function() {
+                let enemyX = (enemie_3.x -= 6);
+                ctx.drawImage(eggImage, enemyX, enemie_3.y, this.w, this.h);
+
+                if (enemie_3.x < 0) {
+                    let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                    enemie_3.y = randomY;
+                    enemie_3.x = 1150;
+                }
+            }
+        }
+
+        let enemy_1 = new Enemy_1();
+        let enemy_2 = new Enemy_2();
+        let enemy_3 = new Enemy_3();
+
+        function Background() {
+            this.x = 0, this.y = 0, this.w = 2400, this.h = 600
+            this.render = function () {
+                ctx.drawImage(bgImage, this.x--, 0,this.w,this.h);
+                if (this.x <= -1200) {
+                    this.x = 0;
+                }
+
+                // 점수 표시
+                ctx.fillStyle = "crimson";
+                ctx.font = "italic bold 40px Arial"
+                ctx.fillText("SCORE : " + score.toString(), 10, 50);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "cyan";
+                ctx.strokeText("SCORE : " + score.toString(), 10, 50);
+
+                // 생명 표시
+                ctx.fillStyle = "coral";
+                ctx.font = "italic bold 40px Arial"
+                ctx.fillText("Life : " + life.toString(), 1000, 50);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "crimson";
+                ctx.strokeText("Life : " + life.toString(), 1000, 50);
+            
+            }
+
+
+        }
+
+        let background = new Background;
+
+        //무지개 배열 만들기
+        Rainbow = [];
+
+                //고양이 함수
+        function Cat() {
+            this.x = 30, this.y = 150, this.w = 80, this.h = 50;
+
+            this.render = function() {
+                ctx.drawImage(catImage, this.x, this.y,this.w,this.h)
+
+                //고양이와 충돌 함수 실행,
+                detectCollision();
+
+                //무지개 이동
+                for (let i=0; i < Rainbow.length; i++) {
+                    let r = Rainbow[i];
+                    ctx.fillStyle = r.bg;
+                    ctx.fillRect((r.x += 4), r.y, r.w, r.h);
+
+                    //미사일 충돌 함수 실행
+                    checkCollision(r, i);
+
+                    // 화면밖 무지개 제거
+                    if (r.x >= 1200) {
+                        Rainbow.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        // 미사일과 UFO 충돌을 체크 함수
+        function checkCollision (m, mi) {
+            let e_1 = enemie_1;
+            let e_2 = enemie_2;
+            let e_3 = enemie_3;
+        
+
+            if (m.x >= e_1.x && m.x <= e_1.x+50 && m.y >= e_1.y && m.y <= e_1.y+50) {
+                enemie_1.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_1.y = randomY;
+                Rainbow.splice(Rainbow[mi], 2);
+                uSoundPlay();
+                score += 1;
+            }
+
+            if (m.x >= e_2.x && m.x <= e_2.x+50 && m.y >= e_2.y && m.y <= e_2.y+50) {
+                enemie_2.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_2.y = randomY;
+                Rainbow.splice(Rainbow[mi], 2);
+                uSoundPlay();
+                score += 1;
+            }
+
+            if (m.x >= e_3.x && m.x <= e_3.x+50 && m.y >= e_3.y && m.y <= e_3.y+50) {
+                enemie_3.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_3.y = randomY;
+                Rainbow.splice(Rainbow[mi], 2);
+                uSoundPlay();
+                score += 1;
+            }
+        }
+
+
+
+        // 고양이와 계란 충돌 처리 함수
+        function detectCollision () {
+            let e_1 = enemie_1;
+            let e_2 = enemie_2;
+            let e_3 = enemie_3;
+
+            if (cat.x >= e_1.x-50 && cat.x <= e_1.x+50 && cat.y >= e_1.y-50 && cat.y <= e_1.y+50) {
+                enemie_1.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_1.y = randomY;
+                uSoundPlay();
+                life -= 1;
+            }
+
+            if (cat.x >= e_2.x-50 && cat.x <= e_2.x+50 && cat.y >= e_2.y-50 && cat.y <= e_2.y+50) {
+                enemie_2.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_2.y = randomY;
+                uSoundPlay();
+                life -= 1;
+            }
+
+            if (cat.x >= e_3.x-50 && cat.x <= e_3.x+50 && cat.y >= e_3.y-50 && cat.y <= e_3.y+50) {
+                enemie_3.x = 1150;
+                let randomY = Math.floor(Math.random()*(550-10+1))+10;
+                enemie_3.y = randomY;
+                uSoundPlay();
+                life -= 1;
+            }
+        }
+
+
+
+        let cat = new Cat();
+
+                let keysDown = {};
+
+        //키보드
+        function catMove() {
+            if (39 in keysDown) {
+                if (cat.x >= 1200 - cat.w) {
+                    cat.x = 1200 - cat.w;
+                }
+                else {
+                    cat.x += 3;
+                }
+            }
+
+            if (37 in keysDown) {
+                if (cat.x <= 0) {
+                    cat.x = 0;
+                }
+                else {
+                    cat.x -= 3;
+                }
+            }
+
+            if (38 in keysDown) {
+                if (cat.y <= 0) {
+                    cat.y = 0;
+                }
+                else {
+                    cat.y -= 3;
+                }
+            }
+
+            if (40 in keysDown) {
+                if (cat.y >= 600 - cat.h) {
+                    cat.y = 600 - cat.h;
+                }
+                else {
+                    cat.y += 3;
+                }
+            }
+        }
+
+        $(document).keydown((event) => {
+            keysDown[event.keyCode] = true;
+        })
+
+        $(document).keyup((event) => {
+            delete keysDown[event.keyCode];
+                //스페이스 바를 눌렀을때
+                if (event.keyCode == 32) {
+                    Rainbow.push({
+                        x: cat.x + cat.w,
+                        y: cat.y + cat.h,
+                        w: 10,
+                        h: 3,
+                        bg: "cyan"
+                    })
+                    rSoundPlay();
+                }    
+        })
+
+
+
+        //메인 함수
+
+        function animate() {
+            background.render();
+            cat.render();
+            catMove();
+            enemy_1.render();
+            enemy_2.render();
+            enemy_3.render();
+
+            // 게임종료
+            if (life < 0) {
+                $("#game-over").css("display", "flex");
+                clearInterval(animateInterval);
+            }
+        }
+
+        //작동함수
+        let animateInterval = setInterval(animate, 10);
+
+        // 게임오버 버튼을 클릭했을때 게임을 재시작 한다.
+        $("#game-over").on("click", () => {
+            //점수 생명 초기화
+            score = 0;
+            life = 5;
+            //제트기 위치 초기화
+            cat.x = 30, cat.y = 150;
+            //게임오버를 다시 숨기기
+            $("#game-over").css("display", "none");
+            // 게임 다시 시작
+            animateInterval = setInterval(animate, 10);
+        })
+    </script>
+</body>
+</html>
